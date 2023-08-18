@@ -11,56 +11,55 @@ const {
 ---
 
 <article class='grid grid-rows-[300px_auto] group'>
-	<a class='relative' href={`/post/${slug}/`}
+	<a class='relative rounded-lg' href={`/post/${slug}/`}
 		><Image
 			src={heroImage}
-			width={600}
-			height={200}
 			format='webp'
 			loading='eager'
-			class='h-full min-w-full object-cover opacity-0 hover:scale-[101%] transition-all duration-200 rounded-[2px]'
+			class='h-full min-w-full object-cover opacity-0 hover:scale-[101%] transition-all duration-200 rounded-md'
 			alt={`img of ${title}`}
 		/>
 
-		<div class='z-30 absolute bottom-0 w-full h-20'>
-			<div class='-z-10 absolute bottom-0 glass w-full min-h-full'></div>
-			<div class='flex items-center justify-between gap-x-1 text-white px-6 py-4'>
-				<div class='flex flex-col gap-1 items-center justify-center'>
-					<FormattedDate date={pubDate} />
-					<span class='text-sm'> {readTime}</span>
-				</div>
+    	<div class='z-30 absolute bottom-0 w-full h-20'>
+    		<div class='-z-10 absolute bottom-0 backdrop-blur-md bg-slate-500/50 w-full min-h-full'></div>
+    		<div class='flex items-center justify-between gap-x-1 text-white px-6 py-4'>
+    			<div class='flex flex-col gap-1 items-center justify-center'>
+    				<FormattedDate date={pubDate} />
+    				<span class='text-sm'> {readTime}</span>
+    			</div>
 
-				<span class='pb-4'>{category}</span>
-			</div>
-		</div>
-	</a>
+    			<span class='pb-4'>{category}</span>
+    		</div>
+    	</div>
+    </a>
 
-	<div class='flex justify-between flex-col py-6 gap-4 pl-1'>
-		<div class='flex flex-col gap-3'>
-			<div class='flex flex-col gap-2'>
-				<a class='text-2xl font-semibold' href={`/post/${slug}/`}>
-					{title}
-				</a>
-			</div>
+    <div class='flex justify-between flex-col py-6 gap-4 pl-1'>
+    	<div class='flex flex-col gap-3 px-4'>
+    		<div class='flex flex-col gap-2'>
+    			<a class='text-2xl font-semibold' href={`/post/${slug}/`}>
+    				{title}
+    			</a>
+    		</div>
 
-			<p
-				class='overflow-hidden line-clamp-3 text-gray-700 dark:text-white mb-5 font-[400] md:pr-[15%]'>
-				{description}
-			</p>
-		</div>
+    		<p
+    			class='overflow-hidden line-clamp-3 text-gray-700 dark:text-white mb-5 font-[400] md:pr-[15%]'>
+    			{description}
+    		</p>
+    	</div>
 
-		<footer class='flex justify-between items-center'>
-			<a
-				href={`/post/${slug}/`}
-				class='flex justify-center items-center dark:text-white rounded-full hover:translate-x-1 transition-transform duration-150 ease-in-out font-semibold gap-1 group'
-				aria-label={`go to ${title}`}>
-				Read Post <span
-					class='mt-[1px] group-hover:rotate-45 transition-transform duration-250 ease-in-out'
-					><ArrowUp width='18' height='18' /></span
-				>
-			</a>
-		</footer>
-	</div>
+    	<footer class='flex justify-between items-center px-3'>
+    		<a
+    			href={`/post/${slug}/`}
+    			class='flex justify-center items-center dark:text-white rounded-full hover:translate-x-1 transition-transform duration-150 ease-in-out font-semibold gap-1 group'
+    			aria-label={`go to ${title}`}>
+    			Read Post <span
+    				class='mt-[1px] group-hover:rotate-45 transition-transform duration-250 ease-in-out'
+    				><ArrowUp width='18' height='18' /></span
+    			>
+    		</a>
+    	</footer>
+    </div>
+
 </article>
 
 <script>
