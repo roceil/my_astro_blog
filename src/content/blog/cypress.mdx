@@ -1,0 +1,310 @@
+---
+title: 'E2e Testing - Cypress'
+description: 'Cypress是一個現代的前端測試框架，專為測試 Web 應用程式而設計。它提供了簡單易用的 API，允許開發者編寫快速、可靠且易於維護的端對端（E2E）測試。'
+pubDate: '2023/08/18'
+heroImage: '../../assets/cypress/cypress-cover.jpeg'
+category: 'Testing'
+tags: ['Testing', 'CICD']
+---
+
+## **Cypress E2E Testing**
+
+[Cypress](https://www.cypress.io/) 是一個現代的前端測試框架，專為測試 Web 應用程式而設計。它提供了簡單易用的 API，允許開發者編寫快速、可靠且易於維護的端對端（E2E）測試。Cypress 具有即時重載、自動等待、交互式調試等功能，使測試開發更加流暢。它能夠在真實瀏覽器中執行測試，並提供了豐富的斷言和查詢方法，用於驗證 Web 應用的各個方面，從頁面元素到 API 請求。Cypress 非常適合自動化測試、測試驅動開發（TDD）和持續集成，並能幫助開發團隊確保應用程式的穩定性和品質。
+
+## **導入 Cypress 前評估**
+
+Cypress 的導入會影響 CICD 的執行時間，並且在開發上也會產生額外的時間成本，因此，導入前可以用以下根據進行評估：
+
+- <p style='margin-bottom:12px'>
+  	<b>測試複雜性：</b>評估專案的測試場景和複雜性。Cypress 較適合 UI
+  	交互複雜、網頁頁面導航多的情境，但對於複雜的非 UI 邏輯測試，可能需要其他工具。
+  </p>
+
+- <p style='margin-bottom:12px'>
+  	<b>執行效率：</b>Cypress
+  	的真實瀏覽器執行可能相對較慢。評估測試執行時間是否在可接受範圍內，尤其是當你的測試集逐漸增加。
+  </p>
+
+- <p style='margin-bottom:12px'>
+  	<b>持續集成：</b>Cypress 在 CICD 流程內可能會發生 binary missing 的問題，需要額外設定解決。
+  </p>
+
+- <p style='margin-bottom:12px'>
+  	<b>測試覆蓋率：</b>Cypress 在測試開發中需要 DOM
+  	的配合才能抓取元素，這個動作可能會產生額外的時間成本，因此開發中可以針對重要的畫面進行測試，不需要求測試覆蓋率一定要達
+  	8 成。
+  </p>
+
+## **目標**
+
+1. 針對打包後檔案，使用 CICD 對畫面進行自動化測試
+2. 不論測試成功／失敗，皆會保存測試影片
+3. 測試失敗時，會額外保留失敗部分快照圖片
+4. 必要時，可針對頁面上的 API 額外進行測試
+
+## **一、 安裝 Cypress**
+
+> 💡 提供兩種安裝方式（npm、pnpm）
+
+- npm
+  ```
+   npm install cypress --save-dev
+  ```
+- pnpm
+  ```
+   pnpm add cypress -D
+  ```
+- 在 package.json 中加入指令
+  ```
+   "cy": "cypress open"
+  ```
+
+## **二、 安裝 Eslint**
+
+> 💡 提供兩種安裝方式（npm、pnpm）
+
+- npm
+  ```
+   npm install eslint-plugin-cypress --save-dev
+  ```
+- pnpm
+  ```
+    pnpm add eslint-plugin-cypress --save-dev
+  ```
+- 修改 eslint.cjs || eslint.json
+  ```json
+  {
+  	"plugins": ["cypress"],
+  	"extends": ["plugin:cypress/recommended"]
+  }
+  ```
+
+## **三、 開啟本地預覽畫面**
+
+- <p style='margin-bottom:12px'>
+  	使用 <code>pnpm cy</code> 開啟 cypress bashboard 會看到以下畫面，可以選擇{' '}
+  	<code>E2E Testing</code>、<code>Component Testing</code> >>>
+  	<span style='color:red;'>先以 E2E testing 做測試</span>
+  </p>
+  [![](https://docs.cypress.io/img/guides/core-concepts/cypress-app/the-launchpad.png)](https://docs.cypress.io/img/guides/core-concepts/cypress-app/the-launchpad.png)
+
+- <p style='margin-bottom:12px'>
+  	如果是第一次點擊 <code>E2E Testing</code> 會出現 <code>config</code> 設定檔列表，可以先全選同意
+  </p>
+  [![](https://docs.cypress.io/img/guides/getting-started/opening-the-app/scaffolded-files.png)](https://docs.cypress.io/img/guides/getting-started/opening-the-app/scaffolded-files.png)
+
+- <p style='margin-bottom:12px;margin-top:12px'>
+  	接下來需要選擇運行瀏覽器（依設備不同，能用的瀏覽器也不同）
+  </p>
+  <sub style='color:ef4444'>
+  	✪ 本地測試時，如果需要 <code>Chrome</code> 或 <code>Firefox</code> 需要先在本地安裝瀏覽器
+  </sub>
+  [![](https://docs.cypress.io/img/guides/getting-started/opening-the-app/select-browser.png)](https://docs.cypress.io/img/guides/getting-started/opening-the-app/select-browser.png)
+
+- <p style='margin-bottom:12px'>建立第一個測試檔案</p>
+  [![](https://docs.cypress.io/img/guides/end-to-end-testing/writing-your-first-end-to-end-test/create-new-empty-spec.png)](https://docs.cypress.io/img/guides/end-to-end-testing/writing-your-first-end-to-end-test/create-new-empty-spec.png)
+
+- <p style='margin-bottom:12px;margin-top:12px'>
+  	點擊 <code>Create spec</code> 和 <code>Okay, run the spec</code>
+  </p>
+  [![cypress建立測試檔案1.png](https://bookstack.ltedu.com.tw/uploads/images/gallery/2023-08/scaled-1680-/cypress1.png)](https://bookstack.ltedu.com.tw/uploads/images/gallery/2023-08/cypress1.png)
+
+  [![cypress建立測試檔案2.png](https://bookstack.ltedu.com.tw/uploads/images/gallery/2023-08/scaled-1680-/cypress2.png)](https://bookstack.ltedu.com.tw/uploads/images/gallery/2023-08/cypress2.png)
+
+  - <p style='margin-bottom:12px;margin-top:12px'>
+    	之後會直接開始跑測試，如果看到跟下圖一樣的畫面，表示 E2E Testing 初始化成功 🎉
+    </p>
+    [![cypress成功建立測試.png](https://bookstack.ltedu.com.tw/uploads/images/gallery/2023-08/scaled-1680-/cypress.png)](https://bookstack.ltedu.com.tw/uploads/images/gallery/2023-08/cypress.png)
+
+## **四、前端撰寫 `cypress.config.js` 設定檔**
+
+`config` 中會有兩大物件，分別是 `e2e` 及 `component`。
+
+`e2e` 是 E2E Testing 的設定檔，`component` 是 Component Testing 的設定檔，兩邊的設定不會互相污染，除非某設定是寫在全域的除外。
+
+目前有使用到 `e2e` 的設定如下：
+
+- `browser`：設定測試環境預設開啟的瀏覽器
+- `baseUrl`：設定 `visit` 網址，可以搭配 `cy.visit('/')` 使用
+- `proxyUrl`：設定 `proxy` 網址，可以搭配 `cy.request()` 使用
+- `viewportWidth`：設定預設瀏覽器寬度
+- `viewportHeight`：設定預設瀏覽器高度
+- `videoCompression`：設定影片壓縮率，可設定 0（畫質最差） ~ 100（畫質最好）
+- `chromeWebSecurity`：設定是否要關閉瀏覽器安全性，可以避免 CORS 問題
+- `specPattern`：設定測試檔案路徑
+
+- <p style='margin:12px 0'>
+  	<b>範例程式碼：</b>
+  </p>
+
+  ```javascript
+  module.exports = defineConfig({
+  	e2e: {
+  		setupNodeEvents(on, config) {
+  			// implement node event listeners here
+  		},
+  		browser: 'chrome',
+  		baseUrl: 'http://localhost:5177',
+  		proxyUrl: 'http://localhost:5177',
+  		viewportHeight: 1080,
+  		viewportWidth: 1920,
+  		videoCompression: 32,
+  		chromeWebSecurity: false,
+  		specPattern: 'cypress/e2e/**/*.{cy,spec}.{js,jsx,ts,tsx}'
+  	}
+  })
+  ```
+
+## **五、常用指令說明**
+
+<details>
+  <summary>describe：測試模版</summary>
+
+- <p style='margin:12px 0'>第一個參數為模版名稱（可自訂），也可以想像成測試群組</p>
+
+```javascript
+describe('template spec', callback)
+```
+
+</details>
+
+<details>
+  <summary>it：設定測試目標</summary>
+
+- <p style='margin:12px 0'>第一個參數為測試目標名稱（可自訂），可以想像成任務名稱</p>
+
+```javascript
+describe('template spec', () => {
+	it('passes', callback)
+})
+```
+
+</details>
+
+<details>
+  <summary>visit：訪問 URL</summary>
+
+- <p style='margin:12px 0'>任務內容是測試能否連接到 Google</p>
+
+```javascript
+describe('template spec', () => {
+	it('passes', () => {
+		cy.visit('https://google.com')
+	})
+})
+```
+
+</details>
+
+<details>
+  <summary>expect：斷言的一種，用於驗證結果是『 成功 』、『 失敗 』</summary>
+
+- <p style='margin:12px 0'>
+  	驗證 <code>true === true</code> 是否成立
+  </p>
+
+```javascript
+describe('My First Test', () => {
+	it('Does not do much!', () => {
+		expect(true).to.equal(true)
+	})
+})
+```
+
+</details>
+
+<details>
+  <summary>should：斷言的一種，用於判斷條件是否成立</summary>
+
+> should 通常會搭配『 斷言修飾符 』使用，修飾符種類很多，建議直接 GPT
+
+- `match`：驗證是否符合表達式規則
+
+```javascript
+cy.get('#student-search')
+	.invoke('val')
+	.should('match', /^\S+@\S+\.\S+$/)
+```
+
+- `be`：驗證是否為 disable 狀態
+
+```javascript
+cy.contains('button', '送出查詢').should('be.disabled')
+```
+
+</details>
+
+<details>
+  <summary>invoke：獲取 DOM</summary>
+
+> 常見使用情景：取值、取屬性、驗證 DOM 內容
+
+- `情景1：取值` ⇒ 檢查 input 的值是否為信箱格式
+
+```javascript
+cy.get('#student-search').type(correctMail)
+cy.get('#student-search')
+	.invoke('val')
+	.should('match', /^\S+@\S+\.\S+$/)
+```
+
+- `情景2：取屬性` ⇒ log 當前 input 的值
+
+```javascript
+cy.get('#student-search').type(correctMail)
+cy.get("[test-id='input-text']")
+	.invoke('val')
+	.then((val) => {
+		cy.log('val', val)
+	})
+```
+
+- `情景3：驗證 DOM 內容` ⇒ 檢查 DOM 內有指定樣式
+
+```javascript
+cy.get('#student-search').type(correctMail)
+cy.get("[test-id='input-text']").invoke('attr', 'class').should('contain', 'text-lg')
+```
+
+</details>
+
+<details>
+  <summary>contains：選擇特定元素或文字</summary>
+
+- <p style='margin:12px 0'>選擇包含『 送出查詢 』的 button</p>
+
+```javascript
+cy.contains('button', '送出查詢').click()
+```
+
+- <p style='margin:12px 0'>確定『 送出查詢 』是否為 disable</p>
+
+```javascript
+cy.get('#student-search').type('error.mail')
+cy.contains('button', '送出查詢').should('be.disabled')
+```
+
+</details>
+
+<details>
+  <summary>log：於測試時顯示特定內容</summary>
+
+- <p style='margin:12px 0'>單純顯示 log</p>
+
+```javascript
+cy.log('測試成功')
+```
+
+- <p style='margin:12px 0'>
+  	顯示特定內容，需使用 <code>.then</code> 連接
+  </p>
+
+```javascript
+cy.get('#student-search')
+	.invoke('val')
+	.then((val) => {
+		cy.log('input=>', val)
+	})
+```
+
+</details>

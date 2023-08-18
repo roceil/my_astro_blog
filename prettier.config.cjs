@@ -5,16 +5,16 @@ module.exports = {
 	printWidth: 100,
 	semi: false,
 	singleQuote: true,
-				jsxSingleQuote: true,
+	jsxSingleQuote: true,
 	tabWidth: 2,
 	useTabs: true,
 
 	plugins: [require.resolve('prettier-plugin-astro')],
 	overrides: [
 		{
-			files: '*.astro',
+			files: ['*.astro', '*.mdx'], // 添加了 *.mdx 擴展名
 			options: {
-				parser: 'astro'
+				parser: 'mdx' // 使用 MDX 解析器
 			}
 		}
 	]
