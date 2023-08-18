@@ -30,54 +30,52 @@ const articleDate = pubDate.toISOString()
 					<p class='text-center text-sm text-opacity-50'>
 						Published <FormattedDate date={pubDate} />
 					</p>
-					<p class='text-center text-sm text-opacity-50 font-bold'>
-						- {readTime}
-					</p>
 				</div>
 				<h1 class='title text-center text-4xl md:text-6xl md:pb-2.5 font-semibold opacity-0'>
 					{title}
 				</h1>
 			</div>
 
-			<div class='flex flex-wrap justify-center items-center gap-2 gap-y-4 md:gap-5'>
-				{tags.map((tag) => <Tag>{tag}</Tag>)}
-			</div>
-		</header>
+    		<div class='flex flex-wrap justify-center items-center gap-2 gap-y-4 md:gap-5'>
+    			{tags.map((tag) => <Tag>{tag}</Tag>)}
+    		</div>
+    	</header>
 
-		<div class='relative'>
-			{
-				heroImage && (
-					<Image
-						src={heroImage}
-						width={1000}
-						height={500}
-						quality={100}
-						format='jpg'
-						class='rounded-md w-full max-h-[500px] my-8 object-cover opacity-0 transition-opacity duration-700 ease-in'
-						alt={`img of ${title}`}
-					/>
-				)
-			}
-			<div
-				style='backdrop-filter: blur(25px) saturate(180%);'
-				class='placeholder absolute inset-0 blur rounded-md transition-opacity duration-700 ease-out border-2 border-neutral-200 bg-gray-200 dark:border-neutral-900 dark:bg-zinc-900 bg-opacity-90'>
-			</div>
-		</div>
+    	<div class='relative'>
+    		{
+    			heroImage && (
+    				<Image
+    					src={heroImage}
+    					width={1000}
+    					height={500}
+    					quality={100}
+    					format='jpg'
+    					class='rounded-md w-full max-h-[500px] my-8 object-cover opacity-0 transition-opacity duration-700 ease-in'
+    					alt={`img of ${title}`}
+    				/>
+    			)
+    		}
+    		<div
+    			style='backdrop-filter: blur(25px) saturate(180%);'
+    			class='placeholder absolute inset-0 blur rounded-md transition-opacity duration-700 ease-out border-2 border-neutral-200 bg-gray-200 dark:border-neutral-900 dark:bg-zinc-900 bg-opacity-90'>
+    		</div>
+    	</div>
 
-		{
-			updatedDate && (
-				<div class='last-updated-on'>
-					Last updated on <FormattedDate date={updatedDate} />
-				</div>
-			)
-		}
+    	{
+    		updatedDate && (
+    			<div class='last-updated-on'>
+    				Last updated on <FormattedDate date={updatedDate} />
+    			</div>
+    		)
+    	}
 
-		<hr />
+    	<hr />
 
-		<div>
-			<slot />
-		</div>
-	</article>
+    	<div>
+    		<slot />
+    	</div>
+    </article>
+
 </BaseLayout>
 
 <script is:inline>
