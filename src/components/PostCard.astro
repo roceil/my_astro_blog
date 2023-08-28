@@ -10,17 +10,17 @@ const {
 } = Astro.props
 ---
 
-<article class='grid grid-rows-[300px_auto] group'>
-	<a class='relative rounded-lg' href={`/post/${slug}/`}
+<article class='grid grid-rows-[300px_auto] '>
+	<a class='relative rounded-lg hover:scale-[98%] transition-all duration-200' href={`/post/${slug}/`}
 		><Image
 			src={heroImage}
 			format='webp'
 			loading='eager'
-			class='h-full min-w-full object-cover opacity-0 hover:scale-[101%] transition-all duration-200 rounded-md'
+			class='h-full min-w-full object-cover opacity-0 rounded-md'
 			alt={`img of ${title}`}
 		/>
 
-    	<div class='z-30 absolute bottom-0 w-full h-20'>
+    	<div class='z-30 absolute bottom-0 w-full h-20 '>
     		<div class='-z-10 absolute bottom-0 backdrop-blur-md bg-slate-500/50 w-full min-h-full'></div>
     		<div class='flex items-center justify-between gap-x-1 text-white px-6 py-4'>
     			<div class='flex flex-col gap-1 items-center justify-center'>
