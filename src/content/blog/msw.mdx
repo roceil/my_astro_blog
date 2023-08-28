@@ -17,18 +17,18 @@ tags: ['Mock API','Testing']
 - Client Side 主程式
   - `npx msw init public/ --save`
   - 依據環境不同，路徑名稱也不同
-    | Project name                  | Public directory                                          |
+    | Project name | Public directory |
     | ----------------------------- | --------------------------------------------------------- |
-    | https://create-react-app.dev/ | ./public                                                  |
-    | https://www.gatsbyjs.org/     | ./static                                                  |
-    | https://nextjs.org/           | ./public                                                  |
-    | https://vuejs.org/            | ./public                                                  |
-    | https://angular.io/           | ./src (and add it to the assets of the angular.json file) |
-    | https://preactjs.com/         | ./src/static                                              |
-    | https://emberjs.com/          | ./public                                                  |
-    | https://svelte.dev/           | ./public                                                  |
-    | https://kit.svelte.dev/       | ./static                                                  |
-    | https://vitejs.dev/           | ./public                                                  |
+    | https://create-react-app.dev/ | ./public |
+    | https://www.gatsbyjs.org/ | ./static |
+    | https://nextjs.org/ | ./public |
+    | https://vuejs.org/ | ./public |
+    | https://angular.io/ | ./src (and add it to the assets of the angular.json file) |
+    | https://preactjs.com/ | ./src/static |
+    | https://emberjs.com/ | ./public |
+    | https://svelte.dev/ | ./public |
+    | https://kit.svelte.dev/ | ./static |
+    | https://vitejs.dev/ | ./public |
 
 ## 基本用法
 
@@ -48,20 +48,25 @@ tags: ['Mock API','Testing']
 > 💡 這裡示範 CSR 時攔截 API 的程式碼
 
 - browser.ts
+
   ```jsx
   import { setupWorker } from 'msw'
   import { handlers } from './handlers'
 
   export const worker = setupWorker(...handlers)
   ```
+
 - server.ts
+
   ```jsx
   import { setupServer } from 'msw/node'
   import { handlers } from './handlers'
 
   export const mswServer = setupServer(...handlers)
   ```
+
 - handlers.ts
+
   ```jsx
   import { rest } from 'msw'
 
@@ -76,7 +81,9 @@ tags: ['Mock API','Testing']
   	)
   ]
   ```
+
 - index.ts ⇒ 這裡EsLint可能會要求用預設匯出（default），暫時採用Disable
+
   ```jsx
   const IS_BROWSER = typeof window !== 'undefined'
 
@@ -90,6 +97,7 @@ tags: ['Mock API','Testing']
   	}
   }
   ```
+
 - enable MSW
   - 在 `_app.tsx` 內引入 mocks
   ```jsx
@@ -105,20 +113,25 @@ tags: ['Mock API','Testing']
 > 💡 這裡示範 SSR 時攔截 API 的程式碼
 
 - browser.ts
+
   ```jsx
   import { setupWorker } from 'msw'
   import { handlers } from './handlers'
 
   export const worker = setupWorker(...handlers)
   ```
+
 - server.ts
+
   ```jsx
   import { setupServer } from 'msw/node'
   import { handlers } from './handlers'
 
   export const mswServer = setupServer(...handlers)
   ```
+
 - handlers.ts （回傳格式自訂用法）
+
   ```jsx
   import { rest } from 'msw'
 
@@ -149,7 +162,9 @@ tags: ['Mock API','Testing']
   	)
   ]
   ```
+
 - handlers.ts （回傳格式 import 用法）
+
   ```jsx
   // eslint-disable-next-line import/no-extraneous-dependencies
   import { rest } from 'msw'
@@ -171,7 +186,9 @@ tags: ['Mock API','Testing']
   	)
   ]
   ```
+
 - index.ts ⇒ 這裡EsLint可能會要求用預設匯出（default），暫時採用Disable
+
   ```jsx
   const IS_BROWSER = typeof window !== 'undefined'
 
@@ -185,6 +202,7 @@ tags: ['Mock API','Testing']
   	}
   }
   ```
+
 - enable MSW
   - 在 `_app.tsx` 內引入 mocks
   ```jsx
@@ -193,6 +211,7 @@ tags: ['Mock API','Testing']
   })
   ```
 - pages / index.tsx（getServerSideProps）
+
   ```jsx
   export const getServerSideProps = async () => {
     const res = await axios.get('https://jsonplaceholder.typicode.com/users');

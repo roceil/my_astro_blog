@@ -1,0 +1,316 @@
+---
+title: 'K6.io'
+description: 'k6 可以通過 JavaScript 編寫測試腳本，允許用戶模擬多種用戶行為，測試網站和應用的性能和穩定性。k6 也提供了多種內建的執行器，例如逐步增加的並發用戶、保持恆定並發、定時運行等，以滿足不同的測試需求。'
+pubDate: '2023/08/28'
+heroImage: '../../assets/k6/k6-cover.png'
+category: 'Testing'
+tags: ['address testing', 'testing', 'k6']
+---
+
+# What is K6？
+
+---
+
+k6 可以通過 JavaScript 編寫測試腳本，允許用戶模擬多種用戶行為，測試網站和應用的性能和穩定性。k6 也提供了多種內建的執行器，例如逐步增加的並發用戶、保持恆定並發、定時運行等，以滿足不同的測試需求。其簡單的API和豐富的報告功能使用戶能夠輕鬆地分析和視覺化測試結果。k6 還支持 Docker，可輕鬆集成到 CICD 流程中，實現自動化性能測試。
+
+## 導入 K6 前評估
+
+---
+
+- **K6 的執行方式：**
+
+  - 手動執行：如果選擇手動執行，可以在任何時機點執行壓力測試，但因為測試時機不在 CICD 內，等於要額外花時間執行指令，但好處是不會增加 CICD 執行的時間。如果要使用手動測試的話，建議執行『 浸泡測試 』、『 壓力測試 』這類需要長時間的測試類型。
+  - CICD 執行：如果選擇 CICD 執行，可以實現壓測自動化，但依據測試類型的不同，壓廁所需時間也會完全不同，因此如果是 CICD 內執行壓測的話，建議執行一般的『 冒煙測試 』或『 峰值測試 』這類不需要長時間的測試類型。
+
+- **測試需求有無明確：** 如果測試前沒有明確的測試場景，即便測試代碼寫完也有可能因為跟現狀不符導致測試無效，因此如果測試需求還未明確時，建議可以單純以系統基本運行進行測試。
+
+## 目標
+
+---
+
+1. 可依據測試需求，分別提供相對應的壓測代碼。
+
+2. 每種壓測皆可產生可分享的壓測報告。
+
+3. 可利用 CICD 進行系統基本壓測。
+
+4. 可自訂時機使用 `deploy.sh` 執行手動長時間壓測。
+
+## 本機安裝
+
+---
+
+- Mac
+
+  ```bash
+  brew install k6
+  ```
+
+- Docker
+
+  ```bash
+  docker pull grafana/k6
+  ```
+
+## 初始化 K6
+
+---
+
+- 建立測試檔案
+
+  - 沒有特別限制檔案位置
+  - 範例路徑：
+
+    ```bash
+    k6/script.js
+    ```
+
+- 增加啟動指令
+
+  - 因為測試檔放在 `k6` 資料夾內，所以指令為 k6 運行所有在 k6 資料夾下的 js 檔案。
+
+    ```json
+    "test:k6:dev": "k6 run k6/*.js"
+    ```
+
+- 建立初始化測試檔案
+
+  - 在 `k6` 資料夾內新增 `script.js`
+  - 新增範例程式碼：
+
+    ```javascript
+    import http from 'k6/http'
+    import { sleep } from 'k6'
+
+    export const options = {
+    	vus: 1, //代表模擬用戶數量
+    	duration: '1s' //代表執行時間
+    }
+
+    export default function () {
+    	http.get('https://test.k6.io') //測試目標網址
+    }
+    ```
+
+- 運行測試指令：`pnpm test:k6:dev`
+
+## 測試類型
+
+---
+
+| 低流量     | 中等流量   | 高流量      |
+| ---------- | ---------- | ----------- |
+| Smoke Test | Load Test  | Stress Test |
+| Soak Test  | Spike Test |             |
+
+- **Smoke Testing（冒煙測試）：** 測試系統基本運行狀況。
+- **Soak Testing（浸泡測試）：** 測試長時間情況下，系統可靠性。
+- **Load Testing（負載測試）：** 測試預想情況下（用戶數量、吞吐量），系統運行情況。
+- **Spike Testing（峰值測試）：** 測試瞬間的高流量情況。
+- **Stress Testing（壓力測試）：** 測試系統壓力極限。
+
+## 基礎知識
+
+---
+
+- **optios：** 用於定義測試時的基本參數。
+- **default function：** 用於定義測試時要做的操作（ 打 API ...等）。
+- **scenarios：** 用於定義參數場景，可以想像成基本參數的群組物件。
+- **group：** 用於定義複數操作，相當於整個測試過程中要做完 `GET` 、`POST` 、`PUT` 的感覺。
+
+## 常見參數
+
+---
+
+- **vus < number >：** 虛擬用戶
+- **duration < string >：** 預計測試運行時間
+- **iterations < number >：** 預計操作執行次數，如要進行此測試建議不要設定 `duration`
+- **stages < array >：** 以特定時間的方式增加或減少用戶數量，可模仿特殊時段的流量狀況
+- **rps < number >：** 用戶每秒能發送的最大 `request` 數量
+
+## 範例場景
+
+---
+
+- 20 位使用者，同時間每秒發出 200 個請求，持續 20 秒。
+
+  - 範例程式碼：
+
+    ```javascript
+    import http from 'k6/http'
+    import { sleep } from 'k6'
+
+    export const options = {
+    	vus: 10, // 虛擬使用者數量
+    	duration: '20s', // 持續時間
+    	rps: 200 // 每秒請求數
+    }
+
+    export default function () {
+    	http.get('https://test.k6.io') //測試目標網址
+    	sleep(1) //每次執行後休息1秒
+    }
+    ```
+
+- 一開始有 20 位使用者，10 秒後使用者人數突然飆升至 200 人並維持 1 分鐘，最後在30 秒內緩慢下降 5 位使用者。
+
+  - 範例程式碼：
+
+  ```javascript
+  import http from 'k6/http'
+  import { sleep } from 'k6'
+
+  export const options = {
+  	stages: [
+  		{ duration: '30s', target: 20 },
+  		{ duration: '1m30s', target: 10 },
+  		{ duration: '20s', target: 0 }
+  	]
+  }
+
+  export default function () {
+  	http.get('https://test.k6.io') //測試目標網址
+  	sleep(1) //每次執行後休息1秒
+  }
+  ```
+
+- 同時測試 3 種場景
+
+  - 場景一：一開使用戶有 10 位，隨著時間過去 30 秒，用戶數量慢慢增加至 100 位，維持 10 秒後，降回 10 位
+  - 場景二：用戶數量一直維持在 300 位，持續時間 30 秒
+  - 場景三：有 10 位用戶，目標設定為測試 30 秒內能否更新迭代 50 次
+  - 範例程式碼：
+
+  ```javascript
+  export const options = {
+  	scenarios: {
+  		scenarios01: {
+  			executor: 'ramping-arrival-rate',
+  			preAllocatedVUs: 10, // 預先配置的虛擬使用者數量
+  			maxVUs: 100, // 最大虛擬使用者數量
+  			stages: [
+  				{ target: 10, duration: '0s' },
+  				{ target: 100, duration: '30s' },
+  				{ target: 100, duration: '10s' },
+  				{ target: 10, duration: '10s' }
+  			]
+  		},
+  		scenarios02: {
+  			executor: 'constant-vus',
+  			vus: 300,
+  			duration: '30s'
+  		},
+  		scenarios03: {
+  			executor: 'per-vu-iterations',
+  			vus: 10,
+  			iterations: 50,
+  			maxDuration: '30s'
+  		}
+  	}
+  }
+  ```
+
+## Scenarios - executor（場景執行器）
+
+---
+
+> 官方有提供預設的執行器，如果官方的執行器不符合需求，也可以客製化執行器
+
+- `constant-vus` ：用於測試<mark>一定數量</mark>的用戶在<mark>指定時間區段</mark>持續使用系統的執行器。
+
+  ```javascript
+  import http from 'k6/http'
+  import { sleep } from 'k6'
+
+  export const options = {
+  	scenarios: {
+  		constantVUSScenario: {
+  			executor: 'constant-vus',
+  			vus: 10, // 虛擬使用者數量
+  			duration: '5m' // 持續時間
+  		}
+  	}
+  }
+
+  export default function () {
+  	http.get('https://test.k6.io')
+  	sleep(1)
+  }
+  ```
+
+- `ramping-vus`：用於測試使用者隨時間增加時的性能表現。
+
+  ```javascript
+  import http from 'k6/http'
+  import { sleep } from 'k6'
+
+  export const options = {
+  	scenarios: {
+  		rampingVUSScenario: {
+  			executor: 'ramping-vus',
+  			startVUs: 5, // 起始虛擬使用者數量
+  			stages: [
+  				{ duration: '1m', target: 10 }, // 在 1 分鐘內將虛擬使用者數量增加到 10
+  				{ duration: '2m', target: 20 }, // 在接下來的 2 分鐘內將虛擬使用者數量增加到 20
+  				{ duration: '1m', target: 0 } // 在最後的 1 分鐘內停止虛擬使用者
+  			]
+  		}
+  	}
+  }
+
+  export default function () {
+  	http.get('https://test.k6.io')
+  	sleep(1)
+  }
+  ```
+
+- `ramping-arrival-rate`：同樣用於測試使用者隨時間增加的性能表現，但可額外設定到達率，這種設定可以更貼近真實世界的使用者行為。
+
+  ```javascript
+  import http from 'k6/http'
+  import { sleep } from 'k6'
+
+  export const options = {
+  	scenarios: {
+  		rampingArrivalRateScenario: {
+  			executor: 'ramping-arrival-rate',
+  			startRate: 1, // 起始到達率
+  			timeUnit: '1s', // 每秒請求數的時間單位
+  			preAllocatedVUs: 10, // 預先配置的虛擬使用者數量
+  			maxVUs: 200, // 最大虛擬使用者數量
+  			stages: [
+  				{ duration: '30s', target: 100 }, // 在 30 秒內將虛擬使用者數量從 10 增加到 100
+  				{ duration: '20s', target: 200 }, // 在 20 秒內將虛擬使用者數量從 100 增加到 200
+  				{ duration: '10s', target: 0 } // 在 10 秒內將虛擬使用者數量從 200 減少到 0
+  			]
+  		}
+  	}
+  }
+
+  export default function () {
+  	http.get('https://test.k6.io')
+  	sleep(1)
+  }
+  ```
+
+- `constant-arrival-rate`：用於測試基於特定到達率及持續時間的性能表現。
+
+  ```javascript
+  import http from 'k6/http'
+  import { sleep } from 'k6'
+
+  export const options = {
+  	scenarios: {
+  		constantArrivalRateScenario: {
+  			executor: 'constant-arrival-rate',
+  			rate: 10, // 到達率
+  			duration: '5m' // 持續時間
+  		}
+  	}
+  }
+
+  export default function () {
+  	http.get('https://test.k6.io')
+  	sleep(1)
+  }
+  ```
