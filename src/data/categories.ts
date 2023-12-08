@@ -7,5 +7,6 @@ export const CATEGORIES = [
 	'Next.js',
 	'Vue',
 	'Node.js',
-	'TypeScript'
+	'TypeScript',
+	'Database'
 ] as const
