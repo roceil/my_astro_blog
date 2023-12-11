@@ -1,0 +1,207 @@
+---
+title: 'supabase 基本篇'
+description: 'supabase 是一個開源的後端服務，提供了 PostgreSQL 資料庫、RESTful API、Realtime、Authentication、Storage 等功能，並且提供了 SDK 讓我們可以在前端使用。'
+pubDate: '2023/12/08'
+heroImage: '../../assets/supabase/logo.webp'
+category: 'Database'
+tags: ['Database']
+---
+
+# supabase 基本篇
+
+---
+
+## 什麼是 supabase
+
+- [supabase](https://supabase.io/) 是一個開源的後端服務，提供了 PostgreSQL 資料庫、RESTful API、Realtime、Authentication、Storage 等功能，並且提供了 SDK 讓我們可以在前端使用。
+
+## supabase 的優點
+
+1. **開源和免費**：Supabase 是一個開源的專案，可以自由地使用和修改代碼，減少了依賴於特定供應商的風險。
+
+2. **PostgreSQL 的支持**：Supabase 基於 PostgreSQL，提供了強大的數據庫功能和可靠性。
+
+3. **即時數據同步**：支持即時數據同步，方便開發即時應用程式。
+
+4. **易於集成**：提供了許多用於前端開發的 SDK，如 JavaScript、React、Vue 等，方便與現有前端技術棧集成。
+
+5. **身份認證和授權**：內建的用戶身份認證和授權功能，節省開發時間。
+
+## supabase 的缺點
+
+1. **較新的平台**：作為一個相對較新的平台，社群和資源可能不如一些成熟的解決方案豐富。
+
+2. **功能限制**：雖然提供了許多基本功能，但在某些高階功能上可能不如專業的數據庫管理系統或 BaaS 提供商。
+
+3. **學習曲線**：對於不熟悉 PostgreSQL 或者相關技術的開發者來說，可能需要一定的學習時間。
+
+4. **自我部署和維護的複雜性**：如果選擇自行部署，可能需要額外的時間和資源來維護系統。
+
+5. **性能考量**：對於大規模或高流量的應用，可能需要進一步評估 Supabase 的性能表現。
+
+## supabase 的使用方式（以使用線上服務為例）
+
+1. 前往 [supabase](https://supabase.io/) 官網，點選右上角的 `Start for free` 進行註冊。
+2. 註冊完成後，點選右上角的 `Create a new project` 來建立一個新的專案。
+3. 建立完成後，點選左邊的 `Project`，並點選 `Settings`，在 `API` 的區塊中可以看到 `URL` 和 `Key`，這兩個資訊會在後續的使用中需要。
+4. 點選左邊的 `Database`，並點選 `Create table` 來建立一個新的資料表。
+5. 建立完成後，點選 `SQL`，並輸入 `SELECT * FROM <table_name>` 來查看資料表中的資料。
+6. 在專案中安裝 `@supabase/supabase-js` 套件。
+   ```bash
+   npm install @supabase/supabase-js
+   ```
+7. 在 src 中建立一個 `supabase` 資料夾，並在其中建立一個 `index.js` 檔案，並輸入以下程式碼：
+
+   ```js
+   import { createClient } from '@supabase/supabase-js'
+
+   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+   const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+   const supabase = createClient(supabaseUrl, supabaseKey)
+
+   export default supabase
+   ```
+
+8. 在 `.env.local` 檔案中輸入以下程式碼：
+   ```
+   VITE_SUPABASE_URL=<supabase_url>
+   VITE_SUPABASE_ANON_KEY=<supabase_key>
+   ```
+
+## supabase 的常用指令
+
+> supabase 可以使用官方提供的 SDK，其中就可以直接透過 SDK 來操作資料庫，在後台頁面中，也可以選取左邊 sideBar 的 API Docs，裡面會有所有可用的 API 指令（含自建的資料表指令），以下是一些常用的指令。
+
+### auth 指令（透過信箱方式）
+
+> auth 指令通常與 Authentication 有關，可以透過 auth 指令來進行註冊、登入、登出等操作。
+
+#### 註冊
+
+```js
+const { data, error } = await supabase.auth.signUp({
+	email: '',
+	password: ''
+})
+```
+
+#### 登入
+
+```js
+const { data, error } = await supabase.auth.signIn({
+	email: '',
+	password: ''
+})
+```
+
+#### 登出
+
+```js
+const { error } = await supabase.auth.signOut()
+```
+
+#### 取得使用者資料
+
+```js
+const user = supabase.auth.user()
+```
+
+### 資料表指令
+
+> 透過資料表指令可以對資料表進行新增、修改、刪除、查詢等操作，此外，也可以透過 Function 來自訂指令，並讓前端透過 SDK 來呼叫該 Function。
+
+#### 取得資料表中的資料
+
+```js
+const { data, error } = await supabase.from('<table_name>').select('*')
+```
+
+#### 新增資料
+
+```js
+const { data, error } = await supabase.from('<table_name>').insert([
+	{ column1: 'value1', column2: 'value2' },
+	{ column1: 'value3', column2: 'value4' }
+])
+```
+
+#### 修改資料
+
+```js
+const { data, error } = await supabase
+	.from('<table_name>')
+	.update({ column1: 'value1', column2: 'value2' })
+	.select()
+```
+
+#### 刪除資料
+
+```js
+const { data, error } = await supabase.from('<table_name>').delete().eq('id', 1)
+```
+
+### 資料表指令（Functions）
+
+> 使用 Function 可以自訂指令，並讓前端透過 SDK 來呼叫該 Function，這樣子的方式可以讓邏輯都在 supabase 處理，前端單純只負責呼叫 Function，但缺點是資料庫的效能問題不好掌握。
+
+#### 建立 Function（更改狀態）
+
+1. 點選左邊 sideBar 的 `SQL Editor`，點擊 `New query` 並輸入以下程式碼：
+   ```sql
+   REATE OR REPLACE FUNCTION switch_status(todo_id BIGINT)
+   RETURNS VOID AS $$
+   BEGIN
+     UPDATE todos
+     SET is_complete = NOT is_complete
+     WHERE id = todo_id;
+   END;
+   $$ LANGUAGE plpgsql;
+   ```
+2. 點擊左下 `Run` 來執行 Function，如果沒有報錯，則代表 Function 建立成功。
+3. 建立測試 Function，一樣點擊 `New query` 並輸入以下程式碼，建立完成後，點擊左下 `Run` 來執行 Function。
+   ```sql
+   SELECT switch_status(1);
+   ```
+
+#### 建立 Function（刪除資料）
+
+1. 點選左邊 sideBar 的 `SQL Editor`，點擊 `New query` 並輸入以下程式碼：
+   ```sql
+   CREATE OR REPLACE FUNCTION delete_todo(todo_id BIGINT)
+   RETURNS VOID AS $$
+   BEGIN
+     DELETE FROM todos
+     WHERE id = todo_id;
+   END;
+   $$ LANGUAGE plpgsql;
+   ```
+2. 點擊左下 `Run` 來執行 Function，如果沒有報錯，則代表 Function 建立成功。
+3. 建立測試 Function，一樣點擊 `New query` 並輸入以下程式碼，建立完成後，點擊左下 `Run` 來執行 Function。
+   ```sql
+   SELECT delete_todo(1);
+   ```
+
+### 建立 Trigger
+
+> Trigger 可以在資料表中的資料被新增、修改、刪除時，觸發 Function 來進行後續的操作，例如：在資料表中的資料被刪除時，同時也刪除其他資料表中的資料。
+
+#### 建立更新時間的 Trigger
+
+1. 點選左邊 sideBar 的 `SQL Editor`，點擊 `New query` 並輸入以下程式碼：
+   ```sql
+   CREATE OR REPLACE FUNCTION update_timestamp()
+   RETURNS TRIGGER AS $$
+   BEGIN
+     NEW.updated_at = now();
+     RETURN NEW;
+   END;
+   $$ LANGUAGE plpgsql;
+   ```
+2. 點擊左下 `Run` 來執行 Function，如果沒有報錯，則代表 Function 建立成功。
+3. 點擊左邊 sideBar 的 `DataBase`，選擇 `Triggers`，並點擊 `Create trigger`
+4. 在 `Name of trigger` 輸入自定義的名稱
+5. 在 `Table` 選擇要觸發的資料表
+6. 在 `Event` 選擇要觸發的事件類型，例如：`INSERT`、`UPDATE`、`DELETE` 等
+7. 在 `Trigger Type` 選擇此 Trigger 作用的時機點，例如：`BEFORE`、`AFTER` 等
+8. 在 `Orientation` 選擇要觸發的對象，例如：`ROW`、`STATEMENT` 等
+9. 在 `Function to trigger` 選擇要觸發的 Function

@@ -1,0 +1,370 @@
+---
+title: 'Vue3－資料傳遞篇'
+description: 'Vue 3 支持多種資料傳遞方式，包括使用 props 將資料從父組件傳遞到子組件，透過 emits 讓子組件向父組件發送事件，以及利用 provide 和 inject 在祖先和後代組件間共享資料。這些方式增強了組件間的溝通，有助於構建具有清晰資料流的應用程序。'
+pubDate: '2023/11/11'
+heroImage: '../../assets/vue/vue.webp'
+category: 'Vue'
+tags: ['Vue']
+---
+
+> Vue 3 支持多種資料傳遞方式，包括使用 props 將資料從父組件傳遞到子組件，透過 emits 讓子組件向父組件發送事件，以及利用 provide 和 inject 在祖先和後代組件間共享資料。這些方式增強了組件間的溝通，有助於構建具有清晰資料流的應用程序。
+
+## Props
+
+> Props 是用於將資料從父層元件傳遞到子層元件的工具，在接收資料時，子層元件需要先定義資料的 `types`，作為型別驗證的依據。
+
+<details>
+<summary>建立子層元件</summary>
+
+```js
+  <script setup>
+    defineProps({
+      products: {
+        type: Array,
+        default: () => [],
+        required: true,
+      },
+    });
+  </script>
+
+   <template>
+      <li v-for="product in products" :key="product.name">
+      {{ product.name }} / {{ product.price }}
+      </li>
+  </template>
+```
+
+</details>
+
+<details>
+<summary>在父層元件傳遞資料</summary>
+
+```js
+  <script setup>
+    import ProductList from './ProductList.vue';
+    const products = [
+      { name: 'iPhone 12', price: 28900 },
+      { name: 'iPhone 12 Pro', price: 33900 },
+      { name: 'iPhone 12 Pro Max', price: 36900 },
+    ];
+  </script>
+
+  <template>
+    <ProductList :products="products" />
+  </template>
+```
+
+</details>
+
+<br />
+
+- `type`：可以針對接收的 Props 做基本的型別驗證，但即使驗證失敗，也不會影響到程式的執行。
+- `default`：可以設定預設值，當父層元件沒有傳遞資料時，就會使用預設值。
+- `required`：設定為 `true` 時，父層元件必須傳遞資料，但就算沒有傳遞資料，也不會影響到程式的執行。
+- 大小寫問題：在定義 Props 時，屬性名稱如果是使用駝峰式命名法，則在使用時，屬性名稱必須使用連字符號 `-` 來分隔，例如：`productList` 在父層使用時，就必須使用 `product-list`，因為大寫字母在 HTML 中是無效的。
+
+## Emits
+
+> Emits 是用於子層元件去更改父層元件資料時可以使用的工具，在父層需要對此 Emits 事件進行監聽，當事件觸發時，會去呼叫父層元件所定義的方法。
+
+<details>
+<summary>建立子層元件</summary>
+
+```js
+
+<script setup>
+defineProps({
+  sleepTime: {
+    type: Number,
+    required: true,
+  },
+});
+
+const emits = defineEmits(["add-sleep-time", "minus-sleep-time", "reset-sleep-time"]);
+
+const addSleepTime = () => {
+  emits("add-sleep-time");
+};
+
+const minusSleepTime = () => {
+  emits("minus-sleep-time");
+};
+
+const resetSleepTime = () => {
+  emits("reset-sleep-time");
+};
+</script>
+
+<template>
+  <div class="flex flex-col">
+    <div class="flex mt-4 justify-center items-center space-x-4">
+      <button
+        class="border border-black p-3 bg-blue-300 hover:scale-90"
+        @click="addSleepTime"
+      >
+        睡眠 ＋ 1
+      </button>
+      <p>睡眠時間 {{ sleepTime }} 小時</p>
+      <button
+        class="border border-black p-3 bg-blue-300 hover:scale-90"
+        @click="minusSleepTime"
+      >
+        睡眠 － 1
+      </button>
+    </div>
+    <button
+      class="border border-black bg-red-400 p-3 mt-3 hover:scale-90"
+      @click="resetSleepTime"
+    >
+      重設睡眠時間
+    </button>
+  </div>
+</template>
+
+```
+
+</details>
+
+<details>
+<summary>在父層元件監聽事件</summary>
+
+```js
+<script setup>
+import SleepTime from "./SleepTime.vue";
+
+const sleepTime = ref(0);
+
+const addSleepTime = () => {
+  sleepTime.value++;
+};
+
+const minusSleepTime = () => {
+  sleepTime.value--;
+};
+
+const resetSleepTime = () => {
+  sleepTime.value = 0;
+};
+
+</script>
+
+<template>
+  <div class="flex flex-col items-center">
+    <h1 class="text-2xl font-bold">睡眠時間</h1>
+    <SleepTime
+      :sleep-time="sleepTime"
+      @add-sleep-time="addSleepTime"
+      @minus-sleep-time="minusSleepTime"
+      @reset-sleep-time="resetSleepTime"
+    />
+  </div>
+</template>
+```
+
+</details>
+
+<br />
+
+- `defineEmits`：用於定義子層元件可以觸發的事件。
+- 觸發流程：
+  1. 子層定義 `emits` 事件。
+  2. 子層元件透過 `emits` 觸發事件
+  3. 父層元件透過 `@` 來監聽事件
+  4. 當 `emits` 事件被觸發時，會去呼叫父層元件所定義的方法。
+
+## Slots
+
+> Slots 是用於子層元件可以接收父層元件傳遞的 HTML 結構，並且可以直接在子層中顯示，這樣就可以讓子層元件的功用更加的簡化，單純只接收插件，完全不需要處理邏輯。
+
+<br />
+
+> slots 跟 props 最大的不同是，slots 用於接收 HTML 結構，而 props 是接收資料；也就是說 slots 並沒有辦法針對傳進來的元件進行控制，但 props 可以。
+
+<details>
+<summary>建立 slots 模版</summary>
+
+```js
+<template>
+	<div class='border border-black rounded mt-4'>
+		<h2 class='rounded-t px-5 py-3 text-center bg-gray-300 text-xl font-bold'>待辦事項</h2>
+
+		<slot />
+	</div>
+</template>
+```
+
+</details>
+
+<details>
+<summary>建立要插入的元件</summary>
+
+```js
+<script setup>
+defineProps({
+  todo: {
+    type: Object,
+    required: true,
+  },
+});
+</script>
+
+<template>
+  <ul class="mt-3 px-5 space-y-2 h-[200px] overflow-y-scroll">
+    <li v-for="todoItem in todo" :key="todoItem.title">{{ todoItem.title }}</li>
+  </ul>
+</template>
+
+```
+
+</details>
+
+<details>
+<summary>父層元件</summary>
+
+```js
+<script setup>
+import Slot from "../components/Slot.vue";
+import SlotList from "../components/SlotList.vue";
+
+const todo = ref([
+  {
+    title: "買牛奶",
+    done: false,
+  },
+  {
+    title: "買麵包",
+    done: false,
+  },
+  {
+    title: "買蛋糕",
+    done: false,
+  },
+  {
+    title: "回家",
+    done: false,
+  },
+  {
+    title: "吃飯",
+    done: false,
+  },
+  {
+    title: "睡覺",
+    done: false,
+  },
+  {
+    title: "刷牙",
+    done: false,
+  },
+  {
+    title: "洗臉",
+    done: false,
+  },
+]);
+</script>
+
+<template>
+  <Slot>
+    <SlotList :todo="todo" />
+  </Slot>
+</template>
+
+```
+
+</details>
+
+## Teleport
+
+> Teleport 是用於將元件的 HTML 結構，移動到指定的 DOM 節點中（通常是 body），這樣就可以讓元件的 HTML 結構，不受到父層元件的影響，並且可以在任何地方顯示。
+
+<details>
+<summary>建立 Modal</summary>
+
+```js
+<script setup>
+const emits = defineEmits(["close"]);
+
+const close = () => {
+  emits("close");
+};
+
+</script>
+
+<template>
+  <teleport to="body">
+    <div
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+      @click="close"
+    >
+      <div class="bg-white p-6 rounded-lg shadow-lg" @click.stop>
+        <slot></slot>
+        <button
+          class="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          @click="close"
+        >
+          關閉
+        </button>
+      </div>
+    </div>
+  </teleport>
+</template>
+```
+
+</details>
+
+<details>
+<summary>建立 ModalContent(假設傳入的文字是動態的)</summary>
+
+```js
+<script setup>
+
+defineProps({
+  text: {
+    type: String,
+    required: true,
+  },
+})
+
+</script>
+
+<template>
+  <h2 class="text-2xl font-bold mb-4">可愛彈窗</h2>
+  <p>{{ text }}</p>
+</template>
+```
+
+</details>
+
+<details>
+<summary>父元件使用 Modal</summary>
+
+```js
+<script setup>
+import Modal from "../components/modal/Modal.vue";
+import ModalContent from "../components/modal/ModalContent.vue";
+
+const showModal = ref(false);
+</script>
+
+<template>
+  <button
+    @click="showModal = true"
+    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4"
+    >
+      打開 Modal
+  </button>
+
+  <Modal v-if="showModal" @close="showModal = false">
+    <ModalContent text="Here is nothing can show!"/>
+  </Modal>
+</template>
+```
+
+</details>
+
+<br />
+
+- `to`：將元件的 HTML 結構，移動到指定的 DOM 節點中（通常是 body），因為這樣可以讓元件位於 DOM 結構的最上層，不受到父層元件的影響，並且可以在任何地方顯示。
+- `@click.stop`：用於阻止事件冒泡，因為在 Modal 中，點擊 ModalContent 時，會觸發 Modal 的 `@click` 事件，所以需要阻止事件冒泡，才不會觸發 Modal 的 `@click` 事件。
+- 使用方式的比較：
+  - `teleport`：teleport 很容易做到與邏輯隔離，比較有利於維護，且因為內部是使用 slot 的關係，可以插入任何該頁面需要的元件；但缺點是需要額外的 DOM 節點，且會導致 DOM 結構複雜。
+  - `元件化`：可以將 Modal 元件化，並將開關存在 Pinia 內部，好處是當有多重邏輯是需要在 Modal 內處理時，邏輯方法可以封裝的比較乾淨，但壞處是 Modal 元件內的邏輯容易跟父層元件的邏輯混在一起，不利於維護。

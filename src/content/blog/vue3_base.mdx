@@ -1,0 +1,179 @@
+---
+title: 'Vue3－基本語法篇'
+description: 'Vue 3 基本語法包括文本插值 ({{ }})、HTML 渲染 (v-html)、單次渲染 (v-once)、條件控制 (v-if, v-show) 和列表渲染 (v-for)。這些功能結合了 Vue 的響應式系統，使得數據和 UI 緊密結合。'
+pubDate: '2023/11/10'
+heroImage: '../../assets/vue/vue.webp'
+category: 'Vue'
+tags: ['Vue']
+---
+
+> Vue 3 基本語法包括文本插值、HTML 渲染 (v-html)、單次渲染 (v-once)、條件控制 (v-if, v-show) 和列表渲染 (v-for)。這些功能結合了 Vue 的響應式系統，使得數據和 UI 緊密結合。
+
+## Text
+
+- `v-html`：將資料以 HTML 的方式呈現，但實務上不建議這樣做，因為要防止 XSS 攻擊。
+- `v-once`：只渲染一次，後續即使資料有變動也不會再更新。
+- `{{ }}`：只要是表達式就可以放在括號內使用，但不能放陳述式，例如 `if`、`for` 等等。
+
+## For 迴圈
+
+V-for 除了可以迭代陣列，也可以迭代物件，並且可以取得索引值。
+
+- 使用方式：`v-for="item in items"`
+- 陣列的迴圈：
+  - `v-for="(item, index) in items"`：迭代陣列，並將每一個元素的值傳入指定的變數中。
+
+```javascript
+    < li v-for = "(product, key) in products" >
+          {{ key + 1}} - {{ product.name}}/ {{ product.price }} 元
+    </li>
+```
+
+- 物件的迴圈：
+  - `v-for="(value, key, index) in object"`：迭代物件，並將每一個元素的值傳入指定的變數中。
+
+```javascript
+<li v-for='(value, key, index) in object'>
+	{{ key }} - {{ value }}
+</li>
+```
+
+- `Key`：跑迴圈時，一定要加上 Key ，且 Key 要是唯一值，否則會造成渲染問題。
+- `template`：如果跑迴圈時希望以群組方式渲染，可以使用 template 包裹。
+
+```javascript
+<template v-for='(value, key, index) in object'>
+	<li>
+		{' '}
+		{{ key }} - {{ value }}{' '}
+	</li>
+	<li> ... </li>
+</template>
+```
+
+## If
+
+- 使用方式：`v-if="isShow"`
+  - `v-if`：如果條件為真，則渲染該元素，否則不渲染。
+  - `v-else`：如果條件為假，則渲染該元素，否則不渲染。
+  - `v-else-if`：如果條件為假，則渲染該元素，否則不渲染。
+- `v-show`：如果條件為真，則渲染該元素，否則不渲染，但是會在 DOM 中保留該元素，只是將其 `display` 設為 `none` 。
+- 注意事項：`v-if` 應避免與 `v-for` 同時使用，因為 `v-for` 的優先權比 `v-if` 高。
+
+```javascript
+<template v-if='isShow'>
+	<li v-for='item in items'>{{ item }}</li>
+</template>
+```
+
+## v-model
+
+> 使用 v-model 時會讓資料與畫面進行雙向綁定。
+
+- checkbox：使用 `v-model` 時，如果是 checkbox，True 或 False 會自動綁定到資料中。
+
+```javascript
+<input type='checkbox' class='form-check-input' id='check1' v-model='checkAnswer' />
+```
+
+- checkbox 的 True-Value 與 False-Value：
+
+  - true-value：當 checkbox 被選中時，v-model 綁定的變數將會被設定為 true-value 屬性所指定的值。
+
+  - false-value：當 checkbox 沒有被選中時，v-model 綁定的變數將會被設定為 false-value 屬性所指定的值。
+
+- checkbox 複選：只要 v-model 綁定的是陣列，當 checkbox 的值為 true 時，v-model 會自動將此值加入到陣列中。
+
+## 元件生命週期
+
+> Vue 元件的生命週期指的是從元件創建到銷毀的整個過程，Vue 提供了多個生命週期鉤子來執行特定時刻的代碼，其中要特別注意的是 Option API 跟 Composition API 的生命週期寫法有些許差異。
+
+### Option API
+
+1. **beforeCreate**
+
+   - 在 Vue 實例創建之後，數據觀察和事件/監聽器設置之前被調用。
+   - 此時，數據和方法都還沒有初始化。
+
+2. **created**
+
+   - 在實例創建完成後立即調用。
+   - 此階段完成了數據觀察、屬性和方法的運算、監聽器的設置等。
+   - `render` 函數首次被調用前的階段，但 `$el` 屬性此時不可見。
+
+3. **beforeMount**
+
+   - 在掛載開始之前被調用。
+   - 此時 `render` 函數首次被調用。
+
+4. **mounted**
+
+   - 實例被掛載後調用。
+   - 可以訪問到 DOM 元素 ( `this.$el` )，並且可以執行依賴於 DOM 的操作。
+
+5. **updated**
+
+   - 當 Vue 實例中的數據變化導致虛擬 DOM 重新渲染和打補丁後被調用。
+   - 在數據更新後執行特定操作的適當時機。
+
+6. **activated / deactivated**
+
+   - `<keep-alive>` 組件獨有的生命週期鉤子。
+   - 當組件被激活（activated）或停用（deactivated）時調用。
+
+7. **beforeUnmount**
+
+   - 在卸載 Vue 實例之前被調用。
+   - 實例此時仍然完全可用，適合執行清理操作。
+
+8. **unmounted**
+   - Vue 實例被銷毀後調用。
+   - 此時，所有的指令綁定、事件監聽器都已解除，所有的子實例也都被銷毀。
+
+---
+
+### Composition API
+
+1. **onBeforeMount**
+
+   - 相當於 Vue2 的 beforeMount，組件掛載到 DOM 之前調用。
+
+2. **onMounted**
+
+   - 相當於 Vue2 的 mounted，組件掛載到 DOM 之後調用。
+
+3. **onBeforeUpdate**
+
+   - 相當於 Vue2 的 beforeUpdate，組件更新之前調用。
+
+4. **onUpdated**
+
+   - 相當於 Vue2 的 updated，組件更新之後調用。
+
+5. **onBeforeUnmount**
+
+   - 相當於 Vue2 的 beforeDestroy，組件銷毀之前調用。
+
+6. **onUnmounted**
+
+   - 相當於 Vue2 的 destroyed，組件銷毀之後調用。
+
+7. **onActivated**
+
+   - 當使用 keep-alive 組件時，組件被激活時調用。
+
+8. **onDeactivated**
+
+   - 當使用 keep-alive 組件時，組件被停用時調用。
+
+9. **onErrorCaptured**
+
+   - 當捕獲一個來自子孫組件的錯誤時調用。
+
+10. **onRenderTracked**
+
+- 追蹤組件的渲染時調用。
+
+11. **onRenderTriggered**
+
+- 組件渲染時調用。

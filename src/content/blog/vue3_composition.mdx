@@ -1,0 +1,359 @@
+---
+title: 'Vue3－Composition API篇'
+description: 'Composition API 是 Vue 3 的一個新特性，它提供了一種靈活的方式來組織和重用代碼。通過 setup 函數，開發者可以更好地控制響應式變量、計算屬性和方法，並將相關功能邏輯集中在一起。這有助於解決大型組件和跨組件共享邏輯的問題。'
+pubDate: '2023/11/13'
+heroImage: '../../assets/vue/vue.webp'
+category: 'Vue'
+tags: ['Vue']
+---
+
+> Composition API 是 Vue 3 的一個新特性，它提供了一種靈活的方式來組織和重用代碼。通過 setup 函數，開發者可以更好地控制響應式變量、計算屬性和方法，並將相關功能邏輯集中在一起。這有助於解決大型組件和跨組件共享邏輯的問題。
+
+## Vue 的監聽機制－Proxy
+
+> 以下可以模擬 Vue 的監聽機制，但是 Vue 的監聽機制還有很多細節，例如：比如計算屬性（computed）、監聽器（watch）、組件生命周期、虛擬 DOM 差分算法等。這些都是 Proxy 無法直接模擬的。。
+
+- Vue 會在建立元件時，將 `data` 內的資料轉換成 `getter` 及 `setter`，並且將 `getter` 及 `setter` 註冊到 Vue 的監聽機制中。
+
+- 當資料被取用時，會觸發 `getter`，並將 `getter` 加入到當前的監聽者中。
+
+- 當資料被修改時，會觸發 `setter`，並且通知當前的監聽者資料已經被修改。
+
+- 也可以實際利用 JS 的 Proxy 來模擬 Vue 的監聽機制，範例如下：
+
+  1. 先建立一個 `handler` 物件，定義資料的 `get` 及 `set`。
+
+  ```js
+  const handler = {
+  	get(obj, prop) {
+  		console.log(`get => target：${JSON.stringify(obj)}`)
+  		console.log(`get => key：${prop}`)
+  		return obj[prop]
+  	},
+  	set(obj, prop, newValue) {
+  		console.log(`set => target：${JSON.stringify(obj)}`)
+  		console.log(`set => key：${prop}`)
+  		console.log(`set => value：${newValue}`)
+  		obj[prop] = newValue // 這行是必需的，用於實際更新對象的屬性
+  		return true
+  	}
+  }
+  ```
+
+  2. new 一個 Proxy 物件，並將初始資料的物件跟 `handler` 物件傳入。
+
+  ```js
+  const proxy = new Proxy({ num: 0 }, handler)
+  ```
+
+  3. 當 log 出 `proxy.num` 時，會觸發 `handler` 的 `get` 方法。
+
+  ```js
+  console.log(proxy.num)
+  // get => target：{"num":0}
+  // get => key：num
+  // 0
+  ```
+
+  4. 當修改 `proxy.num` 時，會觸發 `handler` 的 `set` 方法。
+
+  ```js
+  proxy.num = 1
+  // set => target：{"num":0}
+  // set => key：num
+  // set => value：1
+  ```
+
+## 響應式宣告－reactive
+
+- reactive 是一個 響應式的 Proxy 物件，所以他的預設值只能是物件型別，不能是純值
+
+- reactive 的物件在更新值時，可以像一般物件一樣直接賦值，不用像 ref 一樣要用 .value
+
+<hr />
+
+- 宣告 reactive 的方式：
+
+  ```js
+  const state = reactive({
+  	name: '小明',
+  	age: 18
+  })
+  ```
+
+- 更新 reactive 的值：
+
+  ```js
+  state.name = '小華'
+  state.age = 20
+  ```
+
+- 範例程式碼：
+
+  ```js
+  <script setup>
+  import { reactive } from "vue";
+
+  const nameOptions = ["小明", "小花", "小華", "小美", "小強"];
+  const ageOptions = [18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]
+
+  const state = reactive({
+    name: "小明",
+    age: 18,
+  });
+
+  const changeName = () => {
+    const randomNum = Math.floor(Math.random() * nameOptions.length);
+    state.name = nameOptions[randomNum];
+  };
+
+  const changeAge = () => {
+    const randomNum = Math.floor(Math.random() * ageOptions.length);
+    state.age = ageOptions[randomNum];
+  };
+  </script>
+
+  <template>
+    <div class="ProxyView container ring-1 mt-3 p-3">
+      <h2 class="text-xl border-b border-black pb-3">Reactive</h2>
+
+      <div class="mt-3">
+        <p>name: {{ state.name }}</p>
+        <p>age: {{ state.age }}</p>
+      </div>
+
+      <div class="mt-3 space-x-3">
+        <button class="border p-3" @click="changeName">改名字</button>
+        <button class="border p-3" @click="changeAge">改年齡</button>
+      </div>
+    </div>
+  </template>
+  ```
+
+## 響應式宣告－ref
+
+> vue3 中 ref 有兩種使用方式，一種是作為狀態儲存、另一種是作為 DOM 的參照。
+
+- 作為狀態儲存時，ref 可以透過 v-model 綁到 DOM 上來達到雙向綁定的效果。
+- 作為 DOM的參照時，可以直接 log ref 的值，會發現它是一個物件，裡面有一個 value 屬性，這個 value屬性就是我們要的 DOM。
+- vue3 中，不建議在外層綁定 ref來取得內部的節點，而是直接在要操作的節點上綁定 ref，這樣可以減少不必要的 DOM 操作。
+- ref 在更新值時，必須要用 .value 來賦值，否則會出現錯誤。
+- 不管是物件還是純值，都可以使用 ref 來進行響應式宣告。
+
+<hr />
+
+- 宣告狀態儲存 ref 的方式：
+
+  ```js
+  const name = ref('小明')
+  ```
+
+- 使用 v-model、ref 進行雙向綁定：
+
+  ```html
+  <input type="text" v-model="name" />
+  ```
+
+- 宣告 DOM 參照 ref 的方式：
+
+  ```js
+  const nameRef = ref(null)
+  ```
+
+- 使用 ref 取得 DOM：
+
+  ```html
+  <input type="text" ref="nameRef" />
+  ```
+
+  ```js
+  console.log(nameRef.value)
+  // <input type="text" ref="nameRef" />
+  ```
+
+- 更新 ref 的值：
+
+  ```js
+  name.value = '小華'
+  ```
+
+- 範例程式碼：
+
+  ```js
+  <script setup>
+  import { ref, watch } from "vue";
+
+  const inputValue = ref(""); // 創建一個 ref 來儲存 input 的值
+  const inputRef = ref(null); // 創建一個 ref 來儲存 div 的 DOM
+
+  // 監控 inputRef 的變化
+  watch(inputRef, () => {
+    inputRef.value.value = "123"; // 當 inputRef 變化時，將焦點設定到 input 上
+  });
+
+  // 監控 inputValue 的變化
+  watch(inputValue, (newValue, oldValue) => {
+    console.log(`Input 值從 ${oldValue} 變為 ${newValue}`);
+  });
+
+  const num = ref(0);
+  let count = 0;
+
+  const addNum = () => {
+    num.value++;
+    count++;
+  };
+
+  const totalNum = () => {
+    if (count === 0) {
+      alert("還沒加過數字");
+      return;
+    }
+    alert(`總共加了 ${count} 次`);
+  };
+
+  const resetNum = () => {
+    num.value = 0;
+    count = 0;
+  };
+  </script>
+
+  <template>
+    <div class="RefsView container pt-3">
+      <div class="ring-1 p-3">
+        <p>使用 ref 抓到 input</p>
+        <!-- 將 input 的值綁定到 inputValue -->
+        <input type="text" class="border border-black" ref="inputRef" />
+      </div>
+
+      <div class="ring-1 mt-3 p-3">
+        <p>
+          數字：<span>{{ num }}</span>
+        </p>
+        <div class="space-x-3 mt-3">
+          <button @click="addNum" class="border p-3">加加</button>
+          <button @click="totalNum" class="border p-3">總共加幾次</button>
+          <button @click="resetNum" class="border p-3">Reset</button>
+        </div>
+      </div>
+    </div>
+  </template>
+  ```
+
+## ref 與 reactive
+
+> ref 與 reactive 都可以用來宣告響應式的資料，那麼什麼時候該用 ref，什麼時候該用 reactive 呢？
+
+- 一般來說建議使用 ref，因為 Proxy 屬性比較不容易因為意外被覆蓋掉。
+- 宣告 reactive 時，可以看到 log 會顯示 handler 跟 Target，這是因為 reactive 是一個 Proxy 物件
+- 宣告 ref 時，可以看到 log 會顯示 `RefImpl`，這是因為 ref 是一個 Vue3 的物件，它內部有 rawValue、value 屬性
+
+  - rawValue：用來存放原始的值
+  - value：用來存放響應式的值（取用的值就是從這裡來的）
+
+- 如果宣告響應式物件時使用 reactive 並且又重新賦值，那麼這個物件的響應式就會失效
+
+  ```js
+  const state = reactive({
+  	name: '小明',
+  	age: 18
+  })
+
+  console.log(state)
+  // Proxy {name: "小明", age: 18}
+
+  state = {
+  	name: '小華',
+  	age: 20
+  }
+
+  console.log(state)
+  // {name: "小華", age: 20} // 這裡就不是 Proxy 物件了
+  ```
+
+- 為防止以上情況，可以使用 ref 來宣告響應式物件，因為重新賦值的時候，實際上是去替換 ref 內部的 value，這樣就不會因為重新賦值而失去響應式
+
+  ```js
+  const state = ref({
+  	name: '小明',
+  	age: 18
+  })
+
+  console.log(state)
+  // RefImpl {_shallow: false, _value: {…}, __v_isRef: true, _rawValue: {…}}
+
+  state.value = {
+  	name: '小華',
+  	age: 20
+  }
+
+  console.log(state)
+  // RefImpl {_shallow: false, _value: {…}, __v_isRef: true, _rawValue: {…}}
+  ```
+
+## 生命週期
+
+> vue3 中 script 標籤會帶上 `setup` 這個屬性，這個屬性跟 vue2 的 created 相同，表示元件處在將資料初始化的階段
+
+- Vue 2 生命週期 Hooks
+
+  1. beforeCreate: 組件實例被完全創建之前調用。
+  2. created: 組件實例創建完成後調用。（此時 data 以初始化完成）
+  3. beforeMount: 組件掛載到 DOM 之前調用。
+  4. mounted: 組件掛載到 DOM 之後調用。（此時 DOM 掛載完成）
+  5. beforeUpdate: 在數據改變，且 DOM 重新渲染之前調用。
+  6. updated: 在數據改變且 DOM 重新渲染之後調用。
+  7. beforeDestroy: 在組件銷毀之前調用。
+  8. destroyed: 在組件銷毀後調用。
+
+- Vue 3 生命週期 Hooks
+
+  1. onBeforeMount：相當於 Vue2 的 beforeMount，組件掛載到 DOM 之前調用。
+  2. onMounted：相當於 Vue2 的 mounted，組件掛載到 DOM 之後調用。
+  3. onBeforeUpdate：相當於 Vue2 的 beforeUpdate，組件更新之前調用。
+  4. onUpdated：相當於 Vue2 的 updated，組件更新之後調用。
+  5. onBeforeUnmount：相當於 Vue2 的 beforeDestroy，組件銷毀之前調用。
+  6. onUnmounted：相當於 Vue2 的 destroyed，組件銷毀之後調用。
+  7. onActivated：當使用 keep-alive 組件時，組件被激活時調用。
+  8. onDeactivated：當使用 keep-alive 組件時，組件被停用時調用。
+  9. onErrorCaptured：當捕獲一個來自子孫組件的錯誤時調用。
+  10. onRenderTracked：追蹤組件的渲染時調用。
+  11. onRenderTriggered：組件渲染時調用。
+
+- 範例程式碼：
+
+  ```js
+  <script setup>
+  import { ref, onMounted } from "vue";
+
+  const num = ref(0);
+  const addNum = ref(3);
+  const isMounted = ref(false);
+
+  const startInterval = () => {
+    const intervalId = setInterval(() => {
+      isMounted.value = true;
+      num.value += addNum.value;
+    }, 1000);
+
+    // 使用 setTimeout 來在 5 秒後清除間隔
+    setTimeout(() => {
+      clearInterval(intervalId);
+      alert("setInterval 結束");
+    }, 5000);
+  };
+
+  onMounted(() => {
+    startInterval();
+  });
+  </script>
+
+  <template>
+    <div class="LifeCycleView container ring-1 mt-3 p-3">
+      <div class="">
+        <p>原始值：{{ num }}</p>
+        <p v-if="isMounted">onMounted 後每秒會增加的值：{{ addNum }}</p>
+      </div>
+    </div>
+  </template>
+  ```

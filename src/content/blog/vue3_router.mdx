@@ -1,0 +1,174 @@
+---
+title: 'Vue3－Router'
+description: 'Vue Router 是 Vue.js 的官方路由管理器，用於構建單頁應用（SPA）。它與 Vue.js 核心深度整合，使開發者可以輕鬆地在 Vue 應用中實現頁面路由功能。'
+pubDate: '2023/11/14'
+heroImage: '../../assets/vue/vue.webp'
+category: 'Vue'
+tags: ['Vue']
+---
+
+> Vue Router 是 Vue.js 的官方路由管理器，用於構建單頁應用（SPA）。它與 Vue.js 核心深度整合，使開發者可以輕鬆地在 Vue 應用中實現頁面路由功能。
+
+## 安裝 vue-router
+
+- 建立 vue 專案時就可以選擇是否安裝 vue-router
+
+## 設定路由
+
+> 如果是使用 vue-cli 建立的專案，路由設定檔會在 src/router/index.js
+
+- 新增路由的步驟：
+  1. 先在 src/views/ 新增一個 vue 檔案，例如：ListView.vue
+  2. 在 src/router/index.js 裡面新增一個路由設定，例如：
+  ```js
+  routes: [
+  	{
+  		path: '/',
+  		name: 'home',
+  		component: () => import('../views/HomeView.vue')
+  	},
+  	{
+  		path: '/list',
+  		name: 'list',
+  		component: () => import('../views/ListView.vue')
+  	}
+  ]
+  ```
+
+## 路由的使用
+
+- 在 template 裡面使用 router-link、push 來設定路由
+
+  - router-link 的 to 要指定路由的 path
+
+  ```html
+  <router-link to="/">Home</router-link> <router-link to="/list">List</router-link>
+  ```
+
+- 在 script 裡面使用 $router.push 指定路由
+
+  ```html
+  <template>
+  	<button @click="navigateToRoute">前往某處</button>
+  </template>
+
+  <script>
+  	export default {
+  		methods: {
+  			navigateToRoute() {
+  				// 可以加入任何邏輯或條件
+  				this.$router.push('/target-route')
+  			}
+  		}
+  	}
+  </script>
+  ```
+
+- router-link v.s. $router.push
+  - router-link 是在 template 裡面使用，$router.push 是在 script 裡面使用
+  - $router.push 適合用在導航前先做一些邏輯判斷，例如：是否登入、是否有權限等等
+
+## 路由保護
+
+> 當某些路由是需要權限才能訪問時，可以使用路由保護的方式，EX：結帳頁面如果沒有登入，就會跳轉回登入頁面
+
+- 路由保護的方式：
+
+  1. 在 router/index.js 宣告條件的函式，檢查 localStorage 是否有 token
+
+  ```js
+  function isLoggedIn() {
+  	return localStorage.getItem('token')
+  }
+  ```
+
+  2. 在 router/index.js 裡面設定路由的 meta
+
+  ```js
+  routes: [
+  	{
+  		path: '/',
+  		name: 'home',
+  		component: () => import('../views/HomeView.vue')
+  	},
+  	{
+  		path: '/list',
+  		name: 'list',
+  		component: () => import('../views/ListView.vue'),
+  		meta: {
+  			requiresAuth: true
+  		}
+  	}
+  ]
+  ```
+
+  3. 在 router/index.js 裡面設定 router.beforeEach
+
+  ```js
+  router.beforeEach((to, from, next) => {
+  	if (to.matched.some((record) => record.meta.requiresAuth)) {
+  		if (!isLoggedIn()) {
+  			next({ path: '/login' })
+  		} else {
+  			next()
+  		}
+  	} else {
+  		next()
+  	}
+  })
+  ```
+
+  - to: 即將要進入的目標路由對象
+  - from: 當前導航正要離開的路由對象
+  - next: 表示可以直接通過，且一定要調用該方法來 resolve。
+
+## 動態路由
+
+> 當路由的 path 是動態的時候，可以使用動態路由的方式，例如：商品頁面的路由是 /product/:id，需要注意的是如果動態路由是子路由的情況，router 的 routes 要寫兩次，一次是父路由，一次是子路由
+
+- 動態路由的設定：
+
+  1. 在 router/index.js 裡面設定路由的 path
+
+  ```js
+  routes: [
+  	{
+  		path: '/shoplist',
+  		component: () => import('../views/ShopListView.vue')
+  	},
+  	{
+  		path: '/shoplist',
+  		children: [
+  			{
+  				path: ':id',
+  				component: () => import('../views/ListView.vue')
+  			}
+  		]
+  	}
+  ]
+  ```
+
+  2. 在 template 裡面使用 router-link、push 來設定路由
+
+  ```html
+  <router-link :to="`/product/${product.id}`">Product</router-link>
+  ```
+
+  3. 在 script 裡面使用 $router.push 指定路由
+
+  ```html
+  <template>
+  	<button @click="navigateToRoute">前往某處</button>
+  </template>
+
+  <script>
+  	export default {
+  		methods: {
+  			navigateToRoute() {
+  				// 可以加入任何邏輯或條件
+  				this.$router.push(`/product/${product.id}`)
+  			}
+  		}
+  	}
+  </script>
+  ```

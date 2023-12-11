@@ -1,0 +1,189 @@
+---
+title: 'Vue3－Pinia'
+description: 'Pinia 是 Vue.js 的一種狀態管理庫，提供一種輕量且直觀的方式來跨組件共享和管理應用狀態。它使用 Vue 3 的 Composition API，支持 TypeScript，並與 Vue DevTools 完美整合。Pinia 允許開發者為不同部分的應用（如不同頁面或功能模塊）創建單獨的存儲空間，這些存儲空間包含狀態、動作、getters 等，並保持了反應式和可維護性。'
+pubDate: '2023/11/15'
+heroImage: '../../assets/vue/vue.webp'
+category: 'Vue'
+tags: ['Vue']
+---
+
+> Pinia 是 Vue.js 的一種狀態管理庫，提供一種輕量且直觀的方式來跨組件共享和管理應用狀態。它使用 Vue 3 的 Composition API，支持 TypeScript，並與 Vue DevTools 完美整合。Pinia 允許開發者為不同部分的應用（如不同頁面或功能模塊）創建單獨的存儲空間，這些存儲空間包含狀態、動作、getters 等，並保持了反應式和可維護性。
+
+## 建立儲存空間
+
+> Pinia 的儲存空間可以用『 頁面 』為取向管理，例如：『 首頁 』、『 會員中心 』、『 購物車 』等等，每個頁面都有自己的儲存空間，不會互相干擾。
+
+### 建立步驟
+
+1. 引入 Pinia 建立空間函式：`defineStore`
+   ```js
+   import { defineStore } from 'pinia'
+   ```
+2. 初始化空間
+   ```js
+   export const use空間名稱Store = defineStore('空間 ID', () => {
+   	return {}
+   })
+   ```
+
+## 儲存空間內建立響應式物件
+
+> 依照習慣可使用 Composition API 方式建立響應式物件；也可以使用 Option API 方式
+> 建立響應式物件。
+
+### Composition API
+
+<details>
+<summary>範例程式碼</summary>
+
+```js
+import { ref, computed } from 'vue'
+import { defineStore } from 'pinia'
+
+export const useAboutStore = defineStore('about', () => {
+	const count = ref(0)
+
+	function increment() {
+		count.value++
+	}
+
+	function decrement() {
+		count.value--
+	}
+
+	function reset() {
+		count.value = 0
+	}
+
+	const record = computed(() => {
+		const text = `目前的數字是 ${count.value}`
+		let judgeRange = ''
+
+		switch (true) {
+			case count.value > 0:
+				judgeRange = '大於 0'
+				break
+			case count.value < 0:
+				judgeRange = '小於 0'
+				break
+			default:
+				judgeRange = '等於 0'
+				break
+		}
+
+		return `${text}，${judgeRange}`
+	})
+	return {
+		count,
+		increment,
+		decrement,
+		reset,
+		record
+	}
+})
+```
+
+</details>
+
+- `ref`：建立響應式物件
+- `function`：建立方法
+- `computed`：建立計算屬性
+
+---
+
+### Option API
+
+<details>
+<summary>範例程式碼</summary>
+  
+  ```js
+ import { defineStore } from 'pinia'
+
+export const useAboutStore = defineStore('about', {
+  // 定義狀態
+  state: () => ({
+    count: 0,
+  }),
+  // 定義 getters
+  getters: {
+    record: state => {
+      const text = `目前的數字是 ${state.count}`
+      let judgeRange = ''
+
+      if (state.count > 0) {
+        judgeRange = '大於 0'
+      } else if (state.count < 0) {
+        judgeRange = '小於 0'
+      } else {
+        judgeRange = '等於 0'
+      }
+
+      return `${text}，${judgeRange}`
+    },
+
+},
+// 定義 actions
+actions: {
+increment() {
+this.count++
+},
+decrement() {
+this.count--
+},
+reset() {
+this.count = 0
+},
+},
+})
+
+````
+
+</details>
+
+- `state`：建立響應式物件，對應到 Composition API 的 `ref`
+- `actions`：建立方法，對應到 Composition API 的 `function`
+- `getters`：建立計算屬性，對應到 Composition API 的 `computed`
+
+
+## 呼叫儲存空間並使用其中資料、方法
+> 建議不要先解構儲存空間內的資料再使用，會導致資料無法響應式更新。
+
+- 在 Vue 組件中，使用 `use空間名稱Store` 及 `空間 ID` 來呼叫儲存空間：
+  - EX：`import { useAboutStore } from "@/stores/about";`
+- 宣告變數承接儲存空間：
+  - EX：`const aboutStore = useAboutStore();`
+- 直接在 Vue 元件中取用儲存空間內的資料（不解構的原因詳見問題記錄）：
+  - EX：`aboutStore.count` => 表示取用儲存空間內的 `count` 資料
+  - EX：`aboutStore.increment()` => 表示呼叫儲存空間內的 `increment()` 方法
+  - EX：`aboutStore.record` => 表示取用儲存空間內的 `record` 計算屬性
+
+
+## 問題記錄
+
+<details>
+<summary>空間 ID 的作用是什麼</summary>
+
+- 在 Pinia 中，defineStore 函式的第一個參數是用來定義一個唯一的標識（ID）給這個
+狀態庫（store）。
+- 這個 ID 在整個應用程式中是唯一的，用於註冊和尋找該狀態庫。
+- 這個 ID 也會用於在 Vue Devtools 中識別狀態庫。
+- 呼叫儲存空間時，就會用到以下範例
+```js
+import { use空間名稱Store } from '@/Stores/空間 ID'
+````
+
+</details>
+
+<details>
+<summary>為什麼不先解構儲存空間內的資料再使用？</summary>
+
+- Store 本身屬於一個 reactive 建立的物件，而 reactive 物件如果被解構時就會導致
+  資料無法響應式更新。
+- 如果遇到需要解構的情況，可以使用 Pinia 內建的方法來解決：`storeToRefs(儲存空間變數)`
+- 如果不需要解構，建議可以直接在 Vue 元件內使用物件取值的方式，這種方式不會影響到響應式更新。
+
+</details>
+
+## 參考資料
+
+[Vue State Management 介紹 — Pinia](https://blog.twjoin.com/vue-state-management-%E4%BB%8B%E7%B4%B9-pinia-9f8695110cd7)
